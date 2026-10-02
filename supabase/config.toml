@@ -1,5 +1,5 @@
-# 部署后把 project_id 换成你自己的 Supabase 项目 ref（在项目 URL 里）
-project_id = "__SUPABASE_PROJECT_REF__"
+# Supabase 项目 ref（在项目 URL 里：https://<ref>.supabase.co）
+project_id = "ypqpzmgpjslguolpigfo"
 
 [functions.submit-feedback]
 # 前端是匿名调用，必须关闭 JWT 校验
