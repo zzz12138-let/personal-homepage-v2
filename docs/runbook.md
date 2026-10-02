@@ -76,6 +76,21 @@
 2. 打开 `admin.html` → 点「发送登录链接」→ 去邮箱点链接 → 回到同一浏览器 → 看到留言列表
 3. 点某条「标为已读」→ 刷新页面 → 状态保留
 
+### 6.1 接口一键验收（无需打开浏览器）
+
+```bash
+# 前提：当前网络能访问 <项目>.supabase.co，自检：
+curl -sS -o /dev/null -w '%{http_code}\n' https://ypqpzmgpjslguolpigfo.supabase.co
+# 返回 000 或「连接被重置」= 网络仍不通，先解决代理
+
+bash scripts/verify-edge.sh
+```
+
+覆盖：连通性、错误来源 403、GET 405、OPTIONS 204、非法 JSON 400、蜜罐 201、字段校验 400、正常写入 201、超限 429。
+
+> 其中「正常写入」会真实插入 3 条以 `［测试］` 开头的留言，验收完请到
+> Supabase → Table Editor → `feedback` 删除。
+
 ## 7. 常见故障对照
 
 | 现象 | 大概率原因 |
