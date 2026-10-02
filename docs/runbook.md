@@ -3,6 +3,30 @@
 > 本文件只记录「配置项放在哪里、怎么改、怎么验证」，**不含任何密钥**。
 > 密钥请存到密码管理器（例如 macOS 钥匙串 / 1Password / Bitwarden），不要写进本仓库。
 
+## 0. 当前部署现状
+
+| 项 | 值 |
+| --- | --- |
+| 仓库 | `https://github.com/zzz12138-let/personal-homepage-v2` |
+| 站点 | `https://zzz12138-let.github.io/personal-homepage-v2/` |
+| 管理页 | `https://zzz12138-let.github.io/personal-homepage-v2/admin.html` |
+| Pages 来源 | `main` 分支 / 根目录（`/`） |
+| Supabase 项目 | `ypqpzmgpjslguolpigfo`（Southeast Asia · Singapore） |
+| 函数端点 | `https://ypqpzmgpjslguolpigfo.supabase.co/functions/v1/submit-feedback` |
+| 函数 JWT 校验 | **关闭**（`Verify JWT with legacy secret` = OFF） |
+| Auth Site URL | `https://zzz12138-let.github.io/personal-homepage-v2/` |
+| Auth Redirect URLs | `.../personal-homepage-v2/**`、`.../personal-homepage-v2/admin.html` |
+
+> 换 Supabase 项目时，只需改 `assets/config.js`、`supabase/config.toml`，以及本表的 URL。
+
+### 网络前提（重要）
+
+`*.supabase.co` 在部分网络（含中国大陆多数线路）会被按域名重置连接。因此：
+
+- 留言提交、管理页登录都要求**访问者所在网络能连上 `*.supabase.co`**；
+- 用代理/VPN 时必须是**全局模式**，或在分流规则里显式加 `DOMAIN-SUFFIX,supabase.co,PROXY`，否则 GitHub 通而 Supabase 不通；
+- 症状是：页面能打开、点提交后长时间无响应或报网络错误，浏览器控制台里对 `*.supabase.co` 的请求 `net::ERR_CONNECTION_RESET`。
+
 ## 1. 系统组成
 
 | 部分 | 位置 | 说明 |
@@ -61,6 +85,8 @@
 | 提交报「留言服务尚未配置」 | `assets/config.js` 里的 Supabase URL 还没填 |
 | 管理页收不到邮件 | Auth 的 Site URL / Redirect URL 没配成当前 Pages 地址 |
 | 管理页登录后看不到留言 | 登录邮箱与 policy 中的管理员邮箱不一致 |
+| 页面能开但提交一直转圈 / 无响应 | 当前网络连不上 `*.supabase.co`（被重置），见第 0 节「网络前提」 |
+| 管理页点了发链接但登录不进 | 同上：魔法链接回跳也需要能访问 `*.supabase.co` |
 
 ## 8. 密钥保管建议
 
