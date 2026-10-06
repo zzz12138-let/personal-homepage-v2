@@ -88,8 +88,38 @@ bash scripts/verify-edge.sh
 
 覆盖：连通性、错误来源 403、GET 405、OPTIONS 204、非法 JSON 400、蜜罐 201、字段校验 400、正常写入 201、超限 429。
 
-> 其中「正常写入」会真实插入 3 条以 `［测试］` 开头的留言，验收完请到
-> Supabase → Table Editor → `feedback` 删除。
+### 6.2 改完 Edge Function 必须复验（重要）
+
+在 Supabase 后台编辑器里改代码 **不等于已经上线**，一定要点右下角 **Deploy updates**，并等到出现 `Successfully updated edge function`、顶部时间变成 `in a few seconds`。
+
+部署后用**一条命令**确认新代码真的生效（关键是看「非法 JSON」的报错文案）：
+
+```bash
+FN='https://ypqpzmgpjslguolpigfo.supabase.co/functions/v1/submit-feedback'
+curl -sS -X POST "$FN" -H 'Origin: https://zzz12138-let.github.io' \
+  -H 'Content-Type: application/json' --data-binary 'not-json'
+```
+
+- 回 `{"error":"请求格式无效"}` = 新代码已生效 ✅
+- 回 `{"error":"请检查昵称和留言内容"}` = **线上仍是旧版本**（没部署成功），`⌘A` 清空编辑器后重新粘贴再 Deploy
+
+> 2026-10-06 实测踩坑：编辑器里显示的是最新代码，但线上一直跑 10 月 2 日的旧草稿，
+> 表现为**任何** POST（含非法 JSON、蜜罐）都回「请检查昵称和留言内容」。
+> 判断依据：旧草稿拿不到请求体字段，`payload` 近似空对象，必然走字段校验失败分支；
+> 而新代码在解析失败时应回「请求格式无效」。重新粘贴并 Deploy 后 11 项验收全通过。
+
+### 6.3 清掉验收产生的测试数据
+
+验收脚本会真实写入 3 条（昵称 `自动化测试1/2/3`，留言以 `［测试］` 开头）。到 Supabase → SQL Editor：
+
+```sql
+-- 先看一眼
+select id, nickname, left(message, 40) as message_head, created_at
+from public.feedback order by created_at desc;
+
+-- 新站还没有真实留言时，直接清空
+delete from public.feedback;
+```
 
 ## 7. 常见故障对照
 
@@ -97,6 +127,7 @@ bash scripts/verify-edge.sh
 | --- | --- |
 | 提交报「来源不允许」 | 函数里 `ALLOWED_ORIGIN` 与实际访问域名不一致 |
 | 提交报「服务暂不可用」 | 缺 `RATE_LIMIT_SALT`，或函数没部署成功 |
+| 所有 POST（连非法 JSON、蜜罐在内）都回「请检查昵称和留言内容」 | 线上跑的不是仓库里的代码（旧版本没被覆盖），按 6.2 重新部署并复验 |
 | 提交报「留言服务尚未配置」 | `assets/config.js` 里的 Supabase URL 还没填 |
 | 管理页收不到邮件 | Auth 的 Site URL / Redirect URL 没配成当前 Pages 地址 |
 | 管理页登录后看不到留言 | 登录邮箱与 policy 中的管理员邮箱不一致 |
